@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # setup environment
+export CPU=x86_64
 
 # build
 export SRC=dcs
