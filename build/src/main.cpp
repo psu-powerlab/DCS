@@ -33,7 +33,11 @@
 #include <iostream>
 #include <thread>
 #include <chrono>
+#include <string>
+#include <vector>
+#include <map>
 #include "include/DistributedEnergyResource.h"
+#include "include/CommandLineInterface.h"
 #include "include/tsu.h"
 
 // NAMESPACES
@@ -41,6 +45,51 @@ using namespace std;
 
 // GLOBALS
 bool done = false;  // signal program to stop
+
+// Program Help
+// - command line interface arguments during run, [] items have default values
+static void ProgramHelp (const string& name) {
+    cout << "\n[Usage] > " << name << " -c <file path> [-h]\n"
+    	"\t -h \t help\n"
+    	"\t -c \t configuration filename" << endl;
+}  // end Program Help
+
+// Argument Parser
+// - method to parse program initial parameters
+static std::map <std::string, std::string> ArgumentParser (int argc, 
+														   char** argv) {
+    string name = argv[0];
+
+    // parse tokens
+    map <string, string> parameters;
+    string token, argument;
+
+    for (int i = 1; i < argc; i = i+2){
+        token = argv[i];
+
+        // check to see if the is an argument for the program control token
+        if (argc <= i+1) {
+        	cout << "[ERROR] : Invalid program argument: " << token << endl;
+            ProgramHelp(name);
+            exit(EXIT_FAILURE); 
+        } else {
+        	argument = argv[i+1];
+        }
+        
+
+        if ((token == "-h")) {
+            ProgramHelp(name);
+            exit(EXIT_FAILURE);
+        } else if ((token == "-c")) {
+            parameters["config"] = argument;
+        } else {
+            cout << "[ERROR] : Invalid parameter: " << token << endl;
+            ProgramHelp(name);
+            exit(EXIT_FAILURE);
+        }
+    }
+    return parameters;
+}  // end Argument Parser
 
 // THREADS
 // -------
@@ -77,15 +126,25 @@ void ResourceLoop (unsigned int sleep, DistributedEnergyResource* der_ptr) {
 // Main
 // ----
 int main (int argc, char** argv) {
-    cout << "Starting program...\n";
+    cout << "\n***\tDistributed Control System\t***\n";
+    cout << "Initialization...\n";
+   if (argc < 3) {
+        string name = argv[0];
+        ProgramHelp(name);
+        return EXIT_FAILURE;
+    }
+    map <string, string> arguments = ArgumentParser(argc, argv);
 
     // read config file for program configurations and object attributes
-    tsu::config_map configs = tsu::MapConfigFile ("../data/config.ini");
+    tsu::config_map configs = tsu::MapConfigFile (arguments["config"]);
 
     // create program objects
     cout << "\tCreating Distributed Energy Resource\n";
     DistributedEnergyResource* der_ptr 
     	= new DistributedEnergyResource(configs["DER"]);
+
+    cout << "\tCreating Command Line Interface\n";
+    CommandLineInterface CLI(der_ptr);
 
 
     // most objects will have a dedicated thread, but not all
@@ -93,10 +152,12 @@ int main (int argc, char** argv) {
     thread DER (ResourceLoop, stoul(configs["Threads"]["der_sleep"]), der_ptr);
 
     // the CLI will control the program and can signal the program to stop
+	cout << "Initialization complete...\n";
+    CLI.Help ();
     string input;
     while (!done) {
         getline(cin, input);
-        done = true;
+        done = CLI.Control (input);
     }
 
     // when done = true, the program begins the shutdown process
