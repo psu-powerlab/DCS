@@ -38,20 +38,24 @@
 #include <map>
 #include "include/DistributedEnergyResource.h"
 #include "include/CommandLineInterface.h"
+#include "include/Operator.h"
 #include "include/tsu.h"
 
 // NAMESPACES
 using namespace std;
 
 // GLOBALS
-bool done = false;  // signal program to stop
+bool done = false;  		// signal program to stop
+bool scheduled = false;		// stops operator if not enabled at runtime
 
 // Program Help
 // - command line interface arguments during run, [] items have default values
 static void ProgramHelp (const string& name) {
-    cout << "\n[Usage] > " << name << " -c <file path> [-h]\n"
+    cout << "\n[Usage] > " << name << " -c <file path> [-o <y/n>] -h\n"
+    	"\t[] means it has a default value\n"
     	"\t -h \t help\n"
-    	"\t -c \t configuration filename" << endl;
+    	"\t -c \t configuration filename" 
+		"\t -o \t enable operator"  << endl;
 }  // end Program Help
 
 // Argument Parser
@@ -82,6 +86,14 @@ static std::map <std::string, std::string> ArgumentParser (int argc,
             exit(EXIT_FAILURE);
         } else if ((token == "-c")) {
             parameters["config"] = argument;
+        } else if ((token == "-o")) {
+            if ((argument == "y")) {
+            	scheduled = true;
+            } else {
+	        	cout << "[ERROR] : Invalid program argument: " << token << endl;
+	            ProgramHelp(name);
+	            exit(EXIT_FAILURE); 
+            }
         } else {
             cout << "[ERROR] : Invalid parameter: " << token << endl;
             ProgramHelp(name);
@@ -123,6 +135,32 @@ void ResourceLoop (unsigned int sleep, DistributedEnergyResource* der_ptr) {
     }
 }  // end Resource Loop
 
+// Operator Loop
+// - this loop runs the resource control loop at the desired frequency
+void OperatorLoop (unsigned int sleep, Operator* oper_ptr) {
+    unsigned int time_remaining;
+    unsigned int time_wait = sleep;
+    auto time_start = chrono::high_resolution_clock::now();
+    auto time_end = chrono::high_resolution_clock::now();
+    chrono::duration<double, milli> time_elapsed;
+
+    while (!done && scheduled) {
+        time_start = chrono::high_resolution_clock::now();
+         oper_ptr->Loop();
+        time_end = chrono::high_resolution_clock::now();
+        time_elapsed = time_end - time_start;
+
+        // determine sleep duration after deducting process time
+        time_remaining = (time_wait - time_elapsed.count());
+        if (time_wait - time_elapsed.count() > 0) {
+        	time_remaining = time_wait - time_elapsed.count();
+        } else {
+        	time_remaining = 0;
+        }
+        this_thread::sleep_for (chrono::milliseconds (time_remaining));
+    }
+}  // end Resource Loop
+
 // Main
 // ----
 int main (int argc, char** argv) {
@@ -143,6 +181,9 @@ int main (int argc, char** argv) {
     DistributedEnergyResource* der_ptr 
     	= new DistributedEnergyResource(configs["DER"]);
 
+    cout << "\tCreating Operator\n";
+    Operator* oper_ptr = new Operator(configs["Operator"]["schedule"], der_ptr);
+
     cout << "\tCreating Command Line Interface\n";
     CommandLineInterface CLI(der_ptr);
 
@@ -150,6 +191,9 @@ int main (int argc, char** argv) {
     // most objects will have a dedicated thread, but not all
     cout << "\tSpawning threads...\n";
     thread DER (ResourceLoop, stoul(configs["Threads"]["der_sleep"]), der_ptr);
+    thread OPER (
+    	OperatorLoop, stoul(configs["Threads"]["oper_sleep"]), oper_ptr
+    );
 
     // the CLI will control the program and can signal the program to stop
 	cout << "Initialization complete...\n";
@@ -166,11 +210,13 @@ int main (int argc, char** argv) {
 	// First join all active threads to main thread
 	cout << "\nJoining threads...\n";
 	DER.join ();
+	OPER.join ();
 
 	// Then delete all pointers that were created using "new" since they do not
 	// automaticall deconstruct at the end of the program.
     cout << "\nDeleting pointers...\n";
     delete der_ptr;
+    delete oper_ptr;
 
     // return exit status
     return 0;
