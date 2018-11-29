@@ -111,6 +111,18 @@ void DistributedEnergyResource::SetIdleLosses (unsigned int losses) {
     idle_losses_ = losses;
 }  // end Set Idle Losses
 
+// Set Remote Time
+// - the remote time can be updated to sycronize the der to some other clock
+void DistributedEnergyResource::SetRemoteTime (unsigned int utc) {
+    remote_utc_ = utc;
+}  // end Set Remote Time
+
+// Set Price
+// - set the watt-hours per hour loss when idle
+void DistributedEnergyResource::SetPrice (float price) {
+    price_ = price;
+}  // end Set Idle Losses
+
 // Get Rated Export Power
 // - get the watt value available to export to the grid
 unsigned int DistributedEnergyResource::GetRatedExportPower () {
@@ -180,6 +192,18 @@ unsigned int DistributedEnergyResource::GetImportRamp () {
 unsigned int DistributedEnergyResource::GetIdleLosses () {
     return idle_losses_;
 }  // end Get Idle Losses
+
+// Get Remote Time
+// - not sure if this will be required by others, but it is an accessor
+unsigned int DistributedEnergyResource::GetRemoteTime () {
+    return remote_utc_;
+}  // end Get Remote TIme
+
+// Get Price
+// - I don't thing other objects will need this either
+float DistributedEnergyResource::GetPrice () {
+    return price_;
+}  // end Get Price
 
 // Import Power
 // - called by control loop if import power is set

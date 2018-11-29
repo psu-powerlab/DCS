@@ -39,10 +39,14 @@
 #include "include/DistributedEnergyResource.h"
 #include "include/CommandLineInterface.h"
 #include "include/Operator.h"
+#include "include/SmartGridDevice.h"
+#include "include/ServerListener.h"
 #include "include/tsu.h"
+#include "include/aj_utility.h"
 
 // NAMESPACES
 using namespace std;
+using namespace ajn;
 
 // GLOBALS
 bool done = false;  		// signal program to stop
@@ -146,7 +150,33 @@ void OperatorLoop (unsigned int sleep, Operator* oper_ptr) {
 
     while (!done && scheduled) {
         time_start = chrono::high_resolution_clock::now();
-         oper_ptr->Loop();
+        oper_ptr->Loop();
+        time_end = chrono::high_resolution_clock::now();
+        time_elapsed = time_end - time_start;
+
+        // determine sleep duration after deducting process time
+        time_remaining = (time_wait - time_elapsed.count());
+        if (time_wait - time_elapsed.count() > 0) {
+        	time_remaining = time_wait - time_elapsed.count();
+        } else {
+        	time_remaining = 0;
+        }
+        this_thread::sleep_for (chrono::milliseconds (time_remaining));
+    }
+}  // end Resource Loop
+
+// Smart Grid Device Loop
+// - this loop runs the resource control loop at the desired frequency
+void SmartGridDeviceLoop (unsigned int sleep, SmartGridDevice* sgd_ptr) {
+    unsigned int time_remaining;
+    unsigned int time_wait = sleep;
+    auto time_start = chrono::high_resolution_clock::now();
+    auto time_end = chrono::high_resolution_clock::now();
+    chrono::duration<double, milli> time_elapsed;
+
+    while (!done && scheduled) {
+        time_start = chrono::high_resolution_clock::now();
+        sgd_ptr->Loop();
         time_end = chrono::high_resolution_clock::now();
         time_elapsed = time_end - time_start;
 
@@ -187,12 +217,79 @@ int main (int argc, char** argv) {
     cout << "\tCreating Command Line Interface\n";
     CommandLineInterface CLI(der_ptr);
 
+    cout << "\tCreating AllJoyn Message Bus\n";
+    try {
+    	cout << "\t\tInitializing AllJoyn...\n";
+        AllJoynInit();
+    } catch (exception &e) {
+        cout << "[ERROR]: " << e.what() << endl;
+        return EXIT_FAILURE;
+    }
+
+    #ifdef ROUTER
+        try {
+        	cout << "\t\tInitializing AllJoyn Router...\n";
+            AllJoynRouterInit();
+        } catch (exception &e) {
+            cout << "[ERROR]: " << e.what() << endl;
+            return EXIT_FAILURE;
+        }
+    #endif // ROUTER
+
+    string app = configs["AllJoyn"]["app"];
+    bool allow_remote = true;
+    BusAttachment* bus_ptr = new BusAttachment(app.c_str(), allow_remote);
+
+
+    cout << "\tCreating AllJoyn About Data\n";
+    AboutData about_data("en");
+    AboutObj* about_ptr = new AboutObj(*bus_ptr);
+
+    cout << "\tCreating AllJoyn Session Port\n";
+    aj_utility::SessionPortListener SPL;
+    SessionPort port = stoul(configs["AllJoyn"]["port"]);
+
+    cout << "\tSetting up AllJoyn Bus Attachment...\n";
+    QStatus status = aj_utility::SetupBusAttachment (configs,
+                                                     port,
+                                                     SPL,
+                                                     bus_ptr,
+                                                     &about_data);
+
+    cout << "\tCreating AllJoyn Observer\n";
+    const char* server_name = configs["AllJoyn"]["server_interface"].c_str();
+    Observer *obs_ptr = new Observer(*bus_ptr, &server_name, 1);
+
+    cout << "\tCreating AllJoyn Server Listener\n";
+    ServerListener *listner_ptr = new ServerListener(bus_ptr,
+                                                     obs_ptr,
+                                                     der_ptr,
+                                                     server_name);
+    obs_ptr->RegisterListener(*listner_ptr);
+
+    cout << "\tCreating AllJoyn Smart Grid Device\n";
+    const char* device_name = configs["AllJoyn"]["device_interface"].c_str();
+    const char* path = configs["AllJoyn"]["path"].c_str();
+    SmartGridDevice *sgd_ptr = new SmartGridDevice(der_ptr, 
+                                                   bus_ptr, 
+                                                   device_name, 
+                                                   path);
+
+    cout << "\t\tRegistering AllJoyn Smart Grid Device\n";
+    if (ER_OK != bus_ptr->RegisterBusObject(*sgd_ptr)){
+        cout << "\t\t[ERROR]: Failed Registration!\n";
+        return EXIT_FAILURE;
+    }
+    about_ptr->Announce(port, about_data);
 
     // most objects will have a dedicated thread, but not all
     cout << "\tSpawning threads...\n";
-    thread DER (ResourceLoop, stoul(configs["Threads"]["der_sleep"]), der_ptr);
+    thread DER (ResourceLoop, stoul(configs["Threads"]["sleep"]), der_ptr);
     thread OPER (
-    	OperatorLoop, stoul(configs["Threads"]["oper_sleep"]), oper_ptr
+    	OperatorLoop, stoul(configs["Threads"]["sleep"]), oper_ptr
+    );
+    thread SGD (
+    	SmartGridDeviceLoop, stoul(configs["Threads"]["sleep"]), sgd_ptr
     );
 
     // the CLI will control the program and can signal the program to stop
@@ -208,15 +305,30 @@ int main (int argc, char** argv) {
 	cout << "Closing program...\n";
 
 	// First join all active threads to main thread
-	cout << "\nJoining threads...\n";
+	cout << "\tJoining threads\n";
 	DER.join ();
 	OPER.join ();
+	SGD.join ();
+
+    cout << "\tShutting down AllJoyn\n";
+    obs_ptr->UnregisterAllListeners ();
+
+    #ifdef ROUTER
+        AllJoynRouterShutdown ();
+    #endif // ROUTER
+
+    AllJoynShutdown ();
 
 	// Then delete all pointers that were created using "new" since they do not
 	// automaticall deconstruct at the end of the program.
     cout << "\nDeleting pointers...\n";
+    delete sgd_ptr;
+    delete listner_ptr;
+    delete obs_ptr;
+    delete about_ptr;
+    delete bus_ptr;
+   	delete oper_ptr;
     delete der_ptr;
-    delete oper_ptr;
 
     // return exit status
     return 0;

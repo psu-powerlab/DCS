@@ -28,6 +28,10 @@ class DistributedEnergyResource {
         // set idle methods
         void SetIdleLosses (unsigned int energy_per_hour);
 
+        // set remote properties
+        void SetRemoteTime (unsigned int utc);
+        void SetPrice (float price);
+
 
     public:
         // get export methods
@@ -46,6 +50,10 @@ class DistributedEnergyResource {
 
         // get idle methods
         unsigned int GetIdleLosses ();
+
+        // remote properties
+        unsigned int GetRemoteTime ();
+        float GetPrice ();
 
     private:
         // controls
@@ -79,6 +87,8 @@ class DistributedEnergyResource {
         // control properties
         unsigned int export_watts_;
         unsigned int import_watts_;
+        unsigned int remote_utc_;
+        float price_;
         float delta_time_;  // milliseconds
 
     private:
