@@ -41,6 +41,7 @@
 #include "include/Operator.h"
 #include "include/SmartGridDevice.h"
 #include "include/ServerListener.h"
+#include "include/UniversalControlModule.h"
 #include "include/tsu.h"
 #include "include/aj_utility.h"
 
@@ -210,6 +211,8 @@ int main (int argc, char** argv) {
     cout << "\tCreating Distributed Energy Resource\n";
     DistributedEnergyResource* der_ptr 
     	= new DistributedEnergyResource(configs["DER"]);
+
+    UniversalControlModule ucm();
 
     cout << "\tCreating Operator\n";
     Operator* oper_ptr = new Operator(configs["Operator"]["schedule"], der_ptr);

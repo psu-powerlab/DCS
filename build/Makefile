@@ -32,6 +32,10 @@ CFLAGS += -DROUTER
 LIB += -L$(AJ_LIB) -lalljoyn -lajrouter
 INC += -I$(AJ_INC)
 
+# CTA2045 Requirments
+LIB += -L$(CTA_LIB) -lcea2045
+INC += -I$(CTA_INC)
+
 $(TARGET) : $(OBJECTS)
 	@mkdir -p $(TARGETDIR)
 	@echo "\n\tLinking $(TARGET)\n"; $(CC) $^ -o $(TARGET) $(LIB)
