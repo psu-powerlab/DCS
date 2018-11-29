@@ -23,10 +23,14 @@ else
 	CPUFLAGS :=
 endif
 
-
 CFLAGS := -Wall -pipe -std=c++11 -Wno-long-long -Wno-deprecated -g -DQCC_OS_LINUX -DQCC_OS_GROUP_POSIX -DQCC_DBG $(CPUFLAGS)
 LIB := -lstdc++ -lpthread -lrt -lm
 INC := -I src/include
+
+# AllJoyn Requirments
+CFLAGS += -DROUTER
+LIB += -L$(AJ_LIB) -lalljoyn -lajrouter
+INC += -I$(AJ_INC)
 
 $(TARGET) : $(OBJECTS)
 	@mkdir -p $(TARGETDIR)
