@@ -126,7 +126,6 @@ unsigned int UniversalControlModule::GetOpState () {
 // - ...not sure where this is called or where it passes value to?
 bool UniversalControlModule::isMessageTypeSupported (
 	cea2045::MessageTypeCode messageType) {
-	//LOG(INFO) << "message type supported received: " << (int)messageType;
 	if (messageType == cea2045::MessageTypeCode::NONE) {
 		return false;
 	} else {
@@ -138,7 +137,6 @@ bool UniversalControlModule::isMessageTypeSupported (
 // - this should just be implemented within the constructor, but I can't change
 // - it because it is a pure virtual function of IUCM.
 cea2045::MaxPayloadLengthCode UniversalControlModule::getMaxPayload () {
-	//Logger("INFO") << "max payload request received";
 	return cea2045::MaxPayloadLengthCode::LENGTH4096;
 }  // end Get Max Payload
 
@@ -146,7 +144,6 @@ cea2045::MaxPayloadLengthCode UniversalControlModule::getMaxPayload () {
 // - the actual maximum payload by the smart grid device
 void UniversalControlModule::processMaxPayloadResponse (
 	cea2045::MaxPayloadLengthCode maxPayload) {
-	//Logger("INFO") << "max payload response received";
 	SGD_MAX_PAYLOAD_ = maxPayload;
 }  // end Process Max Payload Response
 
@@ -158,12 +155,6 @@ void UniversalControlModule::processDeviceInfoResponse (
 	cea2045::cea2045DeviceInfoResponse* message) {
 	device_type_ = (unsigned int)message->getDeviceType ();
 	vendor_id_ = (unsigned int)message->getVendorID ();
-	//Logger("INFO") << "device info response received";
-	//Logger("INFO") << "    device type: " << device_type_;
-	//Logger("INFO") << "      vendor ID: " << vendor_id_;
-	//Logger("INFO") << "  firmware date: "
-	//		<< 2000 + (int)message->firmwareYear20xx << "-" 
-	//		<< (int)message->firmwareMonth << "-" << (int)message->firmwareDay;
 }  // end Process Device Info Response
 
 // Process Commodity Response
@@ -270,14 +261,12 @@ void UniversalControlModule::processGetUTCTimeResponse (
 // - 
 void UniversalControlModule::processAckReceived (
 	cea2045::MessageCode messageCode) {
-	//LOG(INFO) << "ack received: " << (int)messageCode;
+	// basically do nothing, but structure is there if logging or view Ack
 	switch (messageCode) {
 	case cea2045::MessageCode::SUPPORT_DATALINK_MESSAGES:
-		//LOG(INFO) << "supports data link messages";
 		break;
 
 	case cea2045::MessageCode::SUPPORT_INTERMEDIATE_MESSAGES:
-		//LOG(INFO) << "supports intermediate messages";
 		break;
 
 	default:
@@ -289,7 +278,7 @@ void UniversalControlModule::processAckReceived (
 // - 
 void UniversalControlModule::processNakReceived (
 	cea2045::LinkLayerNakCode nak, cea2045::MessageCode messageCode) {
-	//Logger("WARNING") << "nak received";
+	std::cout << "[WARNING]: unsupported message type" << std::endl;
 	if (nak == cea2045::LinkLayerNakCode::UNSUPPORTED_MESSAGE_TYPE) {
 		switch (messageCode) {
 		case cea2045::MessageCode::SUPPORT_DATALINK_MESSAGES:
@@ -311,33 +300,37 @@ void UniversalControlModule::processNakReceived (
 void UniversalControlModule::processOperationalStateReceived (
 	cea2045::cea2045Basic *message) {
 	op_state_ = (unsigned int)message->opCode1;
-	std::cout << message->opCode2 << std::endl;
-	//LOG(INFO) << "operational state received " << (int)message->opCode2;
+
+	// TODO(TS): this is just for debugging and should be removed later
+	std::cout << "Operational State: " 
+		<< "\tOpCode #1 = " << message->opCode1 
+		<< "\tOpCode #2 = " << message->opCode2 << std::endl;
 }  // end Process Operation State Received
 
 // Process App Ack Received
 // -
 void UniversalControlModule::processAppAckReceived (
 	cea2045::cea2045Basic* message) {
-	//LOG(INFO) << "app ack received";
+	// do nothing
 }  // end Process App Ack Received
 
 // Process App Nak Received
 // - 
 void UniversalControlModule::processAppNakReceived (
 	cea2045::cea2045Basic* message) {
-	//LOG(INFO) << "app nak received";
+	// do nothing
 }  // end PRocess App Nak Received
 
 // Process App Cuxstomer Override
 // -
 void UniversalControlModule::processAppCustomerOverride (
 	cea2045::cea2045Basic* message) {
-	//Logger("INFO") << "app cust override received: " << (int)message->opCode2;
+	// TODO(TS): this may be required by the DCS so a member variable should be
+	// created.
 }  // end Process App Customer Override
 
 // Process Incomplete Message
 void UniversalControlModule::processIncompleteMessage (
 	const unsigned char *buffer, unsigned int numBytes) {
-	//Logger("INFO") << "incomplete message received: " << numBytes;
+	// do nothing
 }

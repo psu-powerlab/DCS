@@ -170,18 +170,16 @@ public:
 	void processNakReceived (
 		cea2045::LinkLayerNakCode nak, cea2045::MessageCode messageCode
 	);
-
 	void processAppAckReceived (cea2045::cea2045Basic *message);
 	void processAppNakReceived (cea2045::cea2045Basic *message);
 	void processOperationalStateReceived (cea2045::cea2045Basic *message);
 	void processAppCustomerOverride (cea2045::cea2045Basic *message);
-
 	void processIncompleteMessage(
 		const unsigned char *buffer, unsigned int numBytes
 	);
 
 private:
-	// properties
+	// properties that are useful to the DCS
 	cea2045::MaxPayloadLengthCode SGD_MAX_PAYLOAD_;
 	unsigned int device_type_;
 	unsigned int vendor_id_;
