@@ -209,8 +209,8 @@ int main (int argc, char** argv) {
 
     // create program objects
     cout << "\tCreating Distributed Energy Resource\n";
-    DistributedEnergyResource* der_ptr 
-    	= new DistributedEnergyResource(configs["DER"]);
+    ElectricWaterHeater* der_ptr 
+    	= new ElectricWaterHeater(configs["DER"]);
 
     UniversalControlModule ucm();
 

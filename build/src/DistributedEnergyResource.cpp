@@ -43,6 +43,25 @@ DistributedEnergyResource::DistributedEnergyResource (
     export_energy_ = rated_export_energy_ * (1 - percent);
 }  // end constructor
 
+// This constructor is to be used by child classes since they will populate
+// properties through device queries
+DistributedEnergyResource::DistributedEnergyResource () : 
+    rated_export_power_(0),
+    rated_export_energy_(0),
+    export_ramp_(0),
+    rated_import_power_(0),
+    rated_import_energy_(0),
+    import_ramp_(0),
+    idle_losses_(0),
+    export_power_(0),
+    import_power_(0),
+    export_watts_(0),
+    import_watts_(0),
+    delta_time_(0),
+    last_utc_(0) {
+    // do nothing
+}  // end constructor
+
 DistributedEnergyResource::~DistributedEnergyResource () {
     //dtor
 }
@@ -57,6 +76,18 @@ void DistributedEnergyResource::SetExportWatts (unsigned int power) {
     }
     export_watts_ = power;
 }  // end Set Export Watts
+
+// Set Export Power
+// - to be used by child classes of DER
+void DistributedEnergyResource::SetExportPower (float power) {
+    export_power_ = power;
+}  // end Set Export Power
+
+// Set Export Energy
+// - to be used by child classes of DER
+void DistributedEnergyResource::SetExportEnergy (float energy) {
+    export_energy_ = energy;
+}  // end Set Export Energy
 
 // Set Rated Export Power
 // - set the watt value available to export to the grid
@@ -86,6 +117,18 @@ void DistributedEnergyResource::SetImportWatts (unsigned int power) {
     }
     import_watts_ = power;
 }  // end Set Import Watts
+
+// Set Import Power
+// - to be used by child classes of DER
+void DistributedEnergyResource::SetImportPower (float power) {
+    import_power_ = power;
+}  // end Set Import Power
+
+// Set Import Energy
+// - to be used by child classes of DER
+void DistributedEnergyResource::SetImportEnergy (float energy) {
+    import_energy_ = energy;
+}  // end Set Import Energy
 
 // Set Rated Import Power
 // - set the watt value available to import from the grid
@@ -122,6 +165,18 @@ void DistributedEnergyResource::SetRemoteTime (unsigned int utc) {
 void DistributedEnergyResource::SetPrice (float price) {
     price_ = price;
 }  // end Set Idle Losses
+
+// Set Log Path
+// -
+void DistributedEnergyResource::SetLogPath (std::string path) {
+    log_path_ = path;
+}  // end Set Log Path
+
+// Set Log Increment
+// - log increment is seconds between logging
+void DistributedEnergyResource::SetLogIncrement (unsigned int inc) {
+    log_inc_ = inc;
+}  // end Set Log Increment
 
 // Get Rated Export Power
 // - get the watt value available to export to the grid
@@ -192,6 +247,12 @@ unsigned int DistributedEnergyResource::GetImportRamp () {
 unsigned int DistributedEnergyResource::GetIdleLosses () {
     return idle_losses_;
 }  // end Get Idle Losses
+
+// Get Log Path
+// - return the path for logging file
+std::string DistributedEnergyResource::GetLogPath () {
+    return log_path_;
+}  // end Get Log Path
 
 // Get Remote Time
 // - not sure if this will be required by others, but it is an accessor
