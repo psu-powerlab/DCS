@@ -41,7 +41,6 @@ class DistributedEnergyResource {
         void SetLogPath (std::string path);
         void SetLogIncrement (unsigned int inc);
 
-
     public:
         // get export methods
         unsigned int GetRatedExportPower ();

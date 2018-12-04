@@ -34,7 +34,6 @@ ElectricWaterHeater::ElectricWaterHeater (
 	SetLogPath (configs["log_path"]);
 	SetLogIncrement (stoul(configs["log_inc"]));
 	Logger("INFO", GetLogPath ()) << "startup complete";
-
 }  // end Constructor
 
 ElectricWaterHeater::~ElectricWaterHeater () {
