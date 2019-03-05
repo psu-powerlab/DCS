@@ -1,4 +1,7 @@
 # DCS (Distributed Control System)
+If you are new to github, then you should read the following link to get an understanding of the workflow required.
+
+https://github.com/emesene/emesene/wiki/GitHowTo#what-should-i-do-if-im-in-a-bad-situation
 
 ## Dependancies
 ### Linux Environment
