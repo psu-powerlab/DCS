@@ -60,6 +60,7 @@ class DistributedEnergyResource {
         // logging
         void SetLogPath (std::string path);
         void SetLogIncrement (unsigned int inc);
+        void SetLastUTC (unsigned int utc);
         std::string GetLogPath ();
 	unsigned int GetLastUTC ();
 	unsigned int GetLogInc ();
