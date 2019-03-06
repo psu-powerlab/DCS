@@ -315,6 +315,11 @@ unsigned int DistributedEnergyResource::GetLogInc () {
 unsigned int DistributedEnergyResource::GetLastUTC () {
     return last_utc_;
 }  // end Get Last UTC
+
+void DistributedEnergyResource::SetLastUTC (unsigned int utc) {
+    last_utc_ = utc;
+}  // end Set Last UTC
+
 // Import Power
 // - calculate power/energy change 
 // - degrement import energy and increment export energy
