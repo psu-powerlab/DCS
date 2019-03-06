@@ -306,6 +306,15 @@ float DistributedEnergyResource::GetPrice () {
     return price_;
 }  // end Get Price
 
+// Get Log Inc
+unsigned int DistributedEnergyResource::GetLogInc () {
+    return log_inc_;
+}  // end Log Inc
+
+// Get Last UTC
+unsigned int DistributedEnergyResource::GetLastUTC () {
+    return last_utc_;
+}  // end Get Last UTC
 // Import Power
 // - calculate power/energy change 
 // - degrement import energy and increment export energy
