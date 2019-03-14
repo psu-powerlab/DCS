@@ -28,7 +28,7 @@ LIB := -lstdc++ -lpthread -lrt -lm
 INC := -I src/include
 
 # AllJoyn Requirments
-CFLAGS += #-DROUTER
+CFLAGS += -DROUTER
 LIB += -L$(AJ_LIB) -lalljoyn -lajrouter
 INC += -I$(AJ_INC)
 
