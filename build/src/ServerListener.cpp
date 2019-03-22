@@ -1,4 +1,5 @@
 // INCLUDES
+#include <cstdlib>
 #include <fstream>
 #include <string>
 #include "include/ServerListener.h"
@@ -76,6 +77,7 @@ void ServerListener::PropertiesChanged (ajn::ProxyBusObject& obj,
 		    }
 		    file.close ();
                     der_ptr_->SetRemoteTime(time_);
+		    std::system ("fake-hwclock load force");
                 }
             } else {
                 std::printf("[LISTENER] : invalid property change!\n");
