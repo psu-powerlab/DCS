@@ -16,7 +16,7 @@ mkdir ~/src ~/dev ~/dev/LOGS
 ``` console
 sudo apt-get update
 sudo apt-get upgrade
-sudo apt-get install fake_hwclock
+sudo apt-get install fake-hwclock
 sudo systemctl enable fake-hwclock.service
 sudo systemctl start fake-hwclock.service
 sudo nano /etc/cron.hourly/fake-hwclock
