@@ -12,6 +12,25 @@ sudo apt-get install tmux git build-essential gcc g++ cmake make xsltproc scons 
 mkdir ~/src ~/dev ~/dev/LOGS
 ```
 
+### Default Network
+For DCS that will be connecting to PSU's network you will need to setup a default network connection using the secure network since it doesn't require daily web authentication. The following links should point you down the right path if something doesn't work out.
+
+https://www.freebsd.org/cgi/man.cgi?query=wpa_supplicant.conf&sektion=5&apropos=0&manpath=NetBSD+6.1.5#CERTIFICATES
+
+https://www.pdx.edu/oit/wi-fi-android
+
+``` console
+sudo nano /etc/wpa_supplicant/wpa_supplicant.conf
+```
+network={
+    ssid="PSU Secure"
+    priority=9
+    eap=PEAP
+    phase2="auth=MSCHAPV2"
+    identity="<odin>@pdx.edu"
+    password="<odinPassword>"
+}
+
 ### Fake Hardware Clock
 ``` console
 sudo apt-get update
